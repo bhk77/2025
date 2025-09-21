@@ -1,10 +1,175 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Mon site GitHub</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Countdown Function</title>
+<style>
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family: Arial, sans-serif;
+    background:linear-gradient(135deg,#0f172a,#001219);
+    color:#000;
+    flex-direction:column;
+    gap:40px;
+    padding:20px;
+  }
+  .event{
+    text-align:center;
+  }
+  .title{
+    font-size:22px;
+    margin-bottom:15px;
+    font-weight:bold;
+    color:#7bd389;
+  }
+  .countdown{
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+    justify-content:center;
+    text-align:center;
+  }
+  .unit{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    flex:1 1 120px;
+    max-width:150px;
+  }
+  .num{
+    font-size:48px;
+    font-weight:bold;
+    min-width:70px;
+    padding:10px 16px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.1);
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+  }
+  .label{
+    margin-top:8px;
+    font-size:14px;
+    color:rgba(0,0,255,0.7);
+    text-transform:uppercase;
+  }
+  .pulse{animation:pop .4s ease}
+  @keyframes pop{
+    0%{transform:scale(1)}
+    50%{transform:scale(1.15)}
+    100%{transform:scale(1)}
+  }
+  .expired{
+    font-size:24px;
+    font-weight:bold;
+    color:#7bd389;
+    text-align:center;
+  }
+  @media (max-width:600px){
+    .num{ font-size:36px; min-width:60px; }
+    .label{ font-size:12px; }
+  }
+</style>
 </head>
 <body>
-  <h1>Bienvenue sur mon site hébergé avec GitHub Pages 🎉</h1>
+
+<div id="app"></div>
+
+<script>
+function countdown(dateStr, eventName){
+  // Parser JJ/MM/AAAA HH:MM:SS → AAAA-MM-JJTHH:MM:SS
+  const parts = dateStr.split(" ");
+  const dmy = parts[0].split("/");
+  const time = parts[1] || "00:00:00";
+  const isoStr = `${dmy[2]}-${dmy[1]}-${dmy[0]}T${time}`;
+  const target = new Date(isoStr);
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "event";
+
+  // Titre de l’événement
+  const title = document.createElement("div");
+  title.className = "title";
+  title.textContent = eventName || "Événement";
+  wrapper.appendChild(title);
+
+  // Bloc countdown
+  const container = document.createElement("div");
+  container.className = "countdown";
+
+  const units = {
+    days:   {label:"Jours",    el:null, box:null},
+    hours:  {label:"Heures",   el:null, box:null},
+    minutes:{label:"Minutes",  el:null, box:null},
+    seconds:{label:"Secondes", el:null, box:null}
+  };
+
+  for(const key in units){
+    const unitDiv = document.createElement("div");
+    unitDiv.className="unit";
+    const num = document.createElement("div");
+    num.className="num";
+    num.textContent="00";
+    const label = document.createElement("div");
+    label.className="label";
+    label.textContent=units[key].label;
+    unitDiv.appendChild(num);
+    unitDiv.appendChild(label);
+    container.appendChild(unitDiv);
+    units[key].el=num;
+    units[key].box=unitDiv;
+  }
+
+  const expiredMsg = document.createElement("div");
+  expiredMsg.className="expired";
+  expiredMsg.textContent="🎉 L'événement a commencé !";
+  expiredMsg.style.display="none";
+
+  wrapper.appendChild(container);
+  wrapper.appendChild(expiredMsg);
+  document.getElementById("app").appendChild(wrapper);
+
+  let last={d:null,h:null,m:null,s:null};
+  function pad(n){return String(n).padStart(2,"0");}
+  function flash(node){node.classList.remove("pulse");void node.offsetWidth;node.classList.add("pulse");}
+
+  function update(){
+    const now=new Date();
+    const diff=target-now;
+    if(diff<=0){
+      container.style.display="none";
+      expiredMsg.style.display="block";
+      clearInterval(timer);
+      return;
+    }
+    const totalSeconds=Math.floor(diff/1000);
+    const s=totalSeconds%60;
+    const totalMinutes=Math.floor(totalSeconds/60);
+    const m=totalMinutes%60;
+    const totalHours=Math.floor(totalMinutes/60);
+    const h=totalHours%24;
+    const d=Math.floor(totalHours/24);
+
+    if(d!==last.d){units.days.el.textContent=d;flash(units.days.box);last.d=d;}
+    if(h!==last.h){units.hours.el.textContent=pad(h);flash(units.hours.box);last.h=h;}
+    if(m!==last.m){units.minutes.el.textContent=pad(m);flash(units.minutes.box);last.m=m;}
+    if(s!==last.s){units.seconds.el.textContent=pad(s);flash(units.seconds.box);last.s=s;}
+  }
+
+  update();
+  const timer=setInterval(update,1000);
+}
+
+// Exemple : plusieurs compteurs
+countdown("14/10/2025 18:00:00", "عيد الجلاء");
+countdown("25/10/2025 12:00:00", "عطلة نصف الثلاثي الأول");
+countdown("16/12/2025 18:00:00", "عيد الثورة");
+countdown("20/12/2025 12:00:00", "عطلة الشتاء");
+countdown("25/10/2025 12:00:00", "عطلة نصف الثلاثي الأول");  
+
+</script>
 </body>
 </html>
